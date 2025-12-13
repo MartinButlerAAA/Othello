@@ -32,18 +32,18 @@ struct validMove
 };
 
 // Integer constant weightings used for calculating moves. These are variable to support optimisation.
-int EDG =   2;	// Score for an edge position.
-int EG2 =   6;	// Score for edge next to a corner we have.
-int CNR =  18;	// Score for a corner position.
-int CNO = -11;	// Score for possible corner for opponent.
-int CN2 =   9;	// Score for possible corner next move.
-int NCN = -13;	// Score for playing next to an available corner.
-int JIN =   5;	// Score for a position in the quadrant near a corner the computer holds.
-int BTW =   2;	// Score for playing between opponent pieces (harder to flip). 
+int EDG =   1;	// Score for an edge position.
+int EG2 =   5;	// Score for edge next to a corner we have.
+int CNR =  15;	// Score for a corner position.
+int CNO = -13;	// Score for possible corner for opponent.
+int CN2 =   8;	// Score for possible corner next move.
+int NCN = -15;	// Score for playing next to an available corner.
+int JIN =   4;	// Score for a position in the quadrant near a corner the computer holds.
+int BTW =   1;	// Score for playing between opponent pieces (harder to flip). 
 int BTO =   4;	// Score for playing between own pieces to fill in the gaps.
-int DIG =  15;	// Score for playing to take advantage of the opponent playing next to a corner.
+int DIG =  12;	// Score for playing to take advantage of the opponent playing next to a corner.
 
-float losses = 20.0f;	// Count to check how many games lost in optimisation run.
+float losses = 300.0f;	// Count to check how many games lost in optimisation run.
 
 // Calculate the computer move. Find all valid moves for the current play and assess each move to give it a score.
 // The select the move with the highest score. Various aspects of the move are considered such as on an edge or corner.
@@ -53,6 +53,7 @@ void computerMove(void)
 	unsigned int moveN = 0;		// Valid Move count for validMoves array.
 	unsigned int selN  = 0;		// Selected valid move.
 	int captN = 0;				// Used to record the highest score to select the best move.
+	int vcnt = 0;				// Count of valid moves available to the opponent.
 
 	// Go through the entire board looking for valid moves 'V's and log the board positions in the validMoves array.
 	// Note board positions are labelled 1-8 left to right and 1-8 top to bottom, 1,1 is top left.
@@ -178,6 +179,17 @@ void computerMove(void)
 				if (workingTable[8][1] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CNO; }
 				if (workingTable[8][8] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CNO; }
 
+				// Count up the valid moves this gives to the opponent and subtract it from the score, the more valid moves the opponent has, the more options they have.
+				vcnt = 0;
+				for (int xi = 1; xi <= 8; xi++)
+				{
+					for (int yi = 1; yi <= 8; yi++)
+					{
+						if (workingTable[xi][yi] == 'V') { vcnt++; }
+					}
+				}
+				validMoves[moveN].score = validMoves[moveN].score - vcnt;
+
 				clearValidWorking();				// Clear the possible red moves to check the possible green moves.
 				validGreenMovesWork(workingTable);	// See what valid moves this gives us.
 				// If the move means that we have a chance to capture a corner increase the score.
@@ -192,7 +204,7 @@ void computerMove(void)
 	}
 
 	// Now that all valid moves have been analysed, select the valid move with the highest score.
-	captN = -1;
+	captN = -100;
 	for (unsigned int a = 0; a < moveN; a++)
 	{
 		if (validMoves[a].score > captN)
@@ -296,7 +308,7 @@ void Optimise(void)
 
 	for (int a = 0; a < 1000; a++)	// Try many different variations of the weightings.
 	{
-		for (int b = 0; b < 500; b++)	// Try 1000 games alternating starting player.
+		for (int b = 0; b < 500; b++)	// Try lots of games alternating starting player.
 		{
 			for (;;)	// Play with player first until game over.
 			{
@@ -407,16 +419,16 @@ void Optimise(void)
 		DIG = DIGb;
 
 		// Randomly tweak some of the values to trial these against the dummy human player.
-		if ((rand() % 5) == 0) { EDG = EDGb + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { EG2 = EG2b + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { CNR = CNRb + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { CNO = CNOb + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { CN2 = CN2b + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { NCN = NCNb + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { JIN = JINb + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { BTW = BTWb + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { BTO = BTOb + (rand() % 5) - 2; }
-		if ((rand() % 5) == 0) { DIG = DIGb + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { EDG = EDGb + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { EG2 = EG2b + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { CNR = CNRb + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { CNO = CNOb + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { CN2 = CN2b + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { NCN = NCNb + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { JIN = JINb + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { BTW = BTWb + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { BTO = BTOb + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { DIG = DIGb + (rand() % 7) - 3; }
 
 		// Clean the win counts ready for next optimisation run.
 		rWin = 0.0f;
