@@ -33,17 +33,17 @@ struct validMove
 
 // Integer constant weightings used for calculating moves. These are variable to support optimisation.
 int EDG =   2;	// Score for an edge position.
-int EG2 =   1;	// Score for edge next to a corner we have.
-int CNR =  10;	// Score for a corner position.
+int EG2 =   6;	// Score for edge next to a corner we have.
+int CNR =  18;	// Score for a corner position.
 int CNO = -11;	// Score for possible corner for opponent.
-int CN2 =   7;	// Score for possible corner next move.
-int NCN =  -7;	// Score for playing next to an available corner.
-int JIN =   3;	// Score for a position in the quadrant near a corner the computer holds.
-int BTW =   1;	// Score for playing between opponent pieces (harder to flip). 
-int BTO =   2;	// Score for playing between own pieces to fill in the gaps.
-int DIG =  13;	// Score for playing to take advantage of the opponent playing next to a corner.
+int CN2 =   9;	// Score for possible corner next move.
+int NCN = -13;	// Score for playing next to an available corner.
+int JIN =   5;	// Score for a position in the quadrant near a corner the computer holds.
+int BTW =   2;	// Score for playing between opponent pieces (harder to flip). 
+int BTO =   4;	// Score for playing between own pieces to fill in the gaps.
+int DIG =  15;	// Score for playing to take advantage of the opponent playing next to a corner.
 
-float losses = 1000.0f;	// Count to check how many games lost in optimisation run.
+float losses = 20.0f;	// Count to check how many games lost in optimisation run.
 
 // Calculate the computer move. Find all valid moves for the current play and assess each move to give it a score.
 // The select the move with the highest score. Various aspects of the move are considered such as on an edge or corner.
@@ -66,13 +66,19 @@ void computerMove(void)
 			{
 				validMoves[moveN].x = x;
 				validMoves[moveN].y = y;
-				validMoves[moveN].score = 0;	// Start the score at 0.
+				validMoves[moveN].score = 0;
 
-				// If the valid move is on an edge then increase the score as edges are preferable as they are harder to flip.
-				if (x == 1) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-				if (x == 8) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-				if (y == 1) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-				if (y == 8) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				// If the move is next to an edge give it a slight increase in score.
+				if (x == 2) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
+				if (x == 7) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
+				if (y == 2) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
+				if (y == 7) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
+
+				// If the valid move is on an edge then increase the score as edges are preferable as they are harder to flip. Look for edges not next to the opponent.
+				if ((x == 1) && (gameTable[1][y - 1] != 'R') && (gameTable[1][y + 1] != 'R')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((x == 8) && (gameTable[8][y - 1] != 'R') && (gameTable[1][y + 1] != 'R')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((y == 1) && (gameTable[x - 1][1] != 'R') && (gameTable[x + 1][1] != 'R')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((y == 8) && (gameTable[x - 1][8] != 'R') && (gameTable[x + 1][8] != 'R')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
 
 				// If the valid move is one of the four corners increase score as corners cannot be flipped.
 				if ((x == 1) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + CNR; }
@@ -100,51 +106,25 @@ void computerMove(void)
 				if ((x == 1) && (y == 7) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
 				if ((x == 2) && (y == 8) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
 
-				// Try to gain a corner if opponent has played a space next to that corner, by putting a piece in line. X axis top and bottom.
-				if ((gameTable[1][1] == ' ') && (gameTable[2][1] == 'R') && (x == 3) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][1] == ' ') && (gameTable[2][1] == 'R') && (gameTable[3][1] == 'R') && (x == 4) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][1] == ' ') && (gameTable[2][1] == 'R') && (gameTable[3][1] == 'R') && (gameTable[4][1] == 'R') && (x == 5) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][1] == ' ') && (gameTable[2][1] == 'R') && (gameTable[3][1] == 'R') && (gameTable[4][1] == 'R') && (gameTable[5][1] == 'R') && (x == 6) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[7][1] == 'R') && (gameTable[6][1] == 'R') && (gameTable[5][1] == 'R') && (gameTable[4][1] == 'R') && (x == 3) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[7][1] == 'R') && (gameTable[6][1] == 'R') && (gameTable[5][1] == 'R') && (x == 4) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[7][1] == 'R') && (gameTable[6][1] == 'R') && (x == 5) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[7][1] == 'R') && (x == 6) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[2][8] == 'R') && (x == 3) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[2][8] == 'R') && (gameTable[3][8] == 'R') && (x == 4) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[2][8] == 'R') && (gameTable[3][8] == 'R') && (gameTable[4][8] == 'R') && (x == 5) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[2][8] == 'R') && (gameTable[3][8] == 'R') && (gameTable[4][8] == 'R') && (gameTable[5][8] == 'R') && (x == 6) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[7][8] == 'R') && (gameTable[6][8] == 'R') && (gameTable[5][8] == 'R') && (gameTable[4][8] == 'R') && (x == 3) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[7][8] == 'R') && (gameTable[6][8] == 'R') && (gameTable[5][8] == 'R') && (x == 4) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[7][8] == 'R') && (gameTable[6][8] == 'R') && (x == 5) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[7][8] == 'R') && (x == 6) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				// If you have an edge piece and the opponent tries to take it, consider taking them instead.
+				if ((y == 1) && (gameTable[x - 1][1] == 'R') && (gameTable[x - 2][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((y == 1) && (gameTable[x + 1][1] == 'R') && (gameTable[x + 2][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((y == 8) && (gameTable[x - 1][8] == 'R') && (gameTable[x - 2][8] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((y == 8) && (gameTable[x + 1][8] == 'R') && (gameTable[x + 2][8] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((x == 1) && (gameTable[1][y - 1] == 'R') && (gameTable[1][y - 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((x == 1) && (gameTable[1][y + 1] == 'R') && (gameTable[1][y + 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((x == 8) && (gameTable[8][y - 1] == 'R') && (gameTable[8][y - 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((x == 8) && (gameTable[8][y + 1] == 'R') && (gameTable[8][y + 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
 
-				// Try to gain a corner if opponent has played a space next to that corner, by putting a piece in line. Y axis left and right.
-				if ((gameTable[1][1] == ' ') && (gameTable[1][2] == 'R') && (x == 1) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][1] == ' ') && (gameTable[1][2] == 'R') && (gameTable[1][3] == 'R') && (x == 1) && (y == 4)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][1] == ' ') && (gameTable[1][2] == 'R') && (gameTable[1][3] == 'R') && (gameTable[1][4] == 'R') && (x == 1) && (y == 5)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][1] == ' ') && (gameTable[1][2] == 'R') && (gameTable[1][3] == 'R') && (gameTable[1][4] == 'R') && (gameTable[1][5] == 'R') && (x == 1) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[1][7] == 'R') && (gameTable[1][6] == 'R') && (gameTable[1][5] == 'R') && (gameTable[1][4] == 'R') && (x == 1) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[1][7] == 'R') && (gameTable[1][6] == 'R') && (gameTable[1][5] == 'R') && (x == 1) && (y == 4)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[1][7] == 'R') && (gameTable[1][6] == 'R') && (x == 1) && (y == 5)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[1][7] == 'R') && (x == 1) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[8][2] == 'R') && (x == 8) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[8][2] == 'R') && (gameTable[8][3] == 'R') && (x == 8) && (y == 4)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[8][2] == 'R') && (gameTable[8][3] == 'R') && (gameTable[8][4] == 'R') && (x == 8) && (y == 5)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[8][2] == 'R') && (gameTable[8][3] == 'R') && (gameTable[8][4] == 'R') && (gameTable[8][5] == 'R') && (x == 8) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[8][7] == 'R') && (gameTable[8][6] == 'R') && (gameTable[8][5] == 'R') && (gameTable[8][4] == 'R') && (x == 8) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[8][7] == 'R') && (gameTable[8][6] == 'R') && (gameTable[8][5] == 'R') && (x == 8) && (y == 4)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[8][7] == 'R') && (gameTable[8][6] == 'R') && (x == 8) && (y == 5)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[8][7] == 'R') && (x == 8) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-
-				// Try to gain a corner if opponent has played a space next to that corner, by putting a piece in line. Y axis left and right. Diagonals.
-				if ((gameTable[1][1] == ' ') && (gameTable[2][2] == 'R') && (x == 3) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][1] == ' ') && (gameTable[2][2] == 'R') && (gameTable[3][3] == 'R') && (gameTable[4][4] == 'R') && (gameTable[5][5] == 'R') && (x == 6) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[7][7] == 'R') && (x == 6) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][8] == ' ') && (gameTable[7][7] == 'R') && (gameTable[6][6] == 'R') && (gameTable[5][5] == 'R') && (gameTable[4][4] == 'R') && (x == 3) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[2][7] == 'R') && (x == 3) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[1][8] == ' ') && (gameTable[2][7] == 'R') && (gameTable[3][6] == 'R') && (gameTable[4][5] == 'R') && (gameTable[5][3] == 'R') && (x == 6) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[7][2] == 'R') && (x == 6) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
-				if ((gameTable[8][1] == ' ') && (gameTable[7][2] == 'R') && (gameTable[6][3] == 'R') && (gameTable[5][4] == 'R') && (gameTable[3][5] == 'R') && (x == 3) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				// Increase the score next to a corner to avoid losing a whole edge, if the opponent plays next to it.
+				if ((y == 1) && (x == 7) && (gameTable[x - 1][1] == 'R') && (gameTable[x - 2][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				if ((y == 1) && (x == 2) && (gameTable[x + 1][1] == 'R') && (gameTable[x + 2][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				if ((y == 8) && (x == 7) && (gameTable[x - 1][8] == 'R') && (gameTable[x - 2][8] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				if ((y == 8) && (x == 2) && (gameTable[x + 1][8] == 'R') && (gameTable[x + 2][8] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				if ((x == 1) && (y == 7) && (gameTable[1][y - 1] == 'R') && (gameTable[1][y - 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				if ((x == 1) && (y == 2) && (gameTable[1][y + 1] == 'R') && (gameTable[1][y + 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				if ((x == 8) && (y == 7) && (gameTable[8][y - 1] == 'R') && (gameTable[8][y - 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
+				if ((x == 8) && (y == 2) && (gameTable[8][y + 1] == 'R') && (gameTable[8][y + 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + DIG; }
 
 				// Favour positions in the quadrant of a corner you have already captured.
 				if ((x <= 3) && (y <= 3) && (gameTable[1][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + JIN; }
@@ -158,7 +138,11 @@ void computerMove(void)
 				if ((gameTable[x - 1][y - 1] == 'R') && (gameTable[x + 1][y + 1] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + BTW; }
 				if ((gameTable[x + 1][y - 1] == 'R') && (gameTable[x - 1][y + 1] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + BTW; }
 
-				// Logic had been included to avoid playing next to an opponents edge pieces, but optimisation set to this to zero or negative on several occasions, so it has been removed.
+				// Favour positions that are already surrounded by the opponent. Especially favour surrounded positions on an edge.
+				if ((y == 1) && (gameTable[x - 1][1] == 'R') && (gameTable[x + 1][1] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((x == 1) && (gameTable[1][y - 1] == 'R') && (gameTable[1][y + 1] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((y == 8) && (gameTable[x - 1][8] == 'R') && (gameTable[x + 1][8] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((x == 8) && (gameTable[8][y - 1] == 'R') && (gameTable[8][y + 1] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
 
 				// Favour positions that are already surrounded by your own pieces.
 				if ((gameTable[x - 1][y] == 'G') && (gameTable[x + 1][y] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
@@ -185,7 +169,6 @@ void computerMove(void)
 					{ validMoves[moveN].score = validMoves[moveN].score + CN2; }
 				if ((gameTable[8][1] == ' ') && ((gameTable[6][3] == 'g') || (gameTable[5][4] == 'g') || (gameTable[4][5] == 'g') || (gameTable[3][6] == 'g')))
 					{ validMoves[moveN].score = validMoves[moveN].score + CN2; }
-
 
 				clearFlips();	// Clear flips now they have been counted, so that the don't impact opponent valid move processing.
 				validRedMovesWork(workingTable);	// See what valid moves this gives to the opponent.
@@ -311,7 +294,7 @@ void Optimise(void)
 	// Check the board to get the pieces counts before the first display.
 	checkBoard('R', &red, &green);
 
-	for (int a = 0; a < 5000; a++)	// Try many different variations of the weightings.
+	for (int a = 0; a < 1000; a++)	// Try many different variations of the weightings.
 	{
 		for (int b = 0; b < 500; b++)	// Try 1000 games alternating starting player.
 		{
@@ -392,7 +375,7 @@ void Optimise(void)
 		std::cout << "Red Wins: " << rWin << " Green Wins: " << gWin << "\n";	// Display number of wins.
 
 		// If the opponent won fewer games, these weightings are an improvemnt, so keep them and display them.
-		if (rWin < losses)
+		if (rWin < (losses * 0.95))
 		{
 			// Set best to match current values;
 			EDGb = EDG;
@@ -424,16 +407,16 @@ void Optimise(void)
 		DIG = DIGb;
 
 		// Randomly tweak some of the values to trial these against the dummy human player.
-		if ((rand() % 5) == 0) { EDG = EDGb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { EG2 = EG2b + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { CNR = CNRb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { CNO = CNOb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { CN2 = CN2b + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { NCN = NCNb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { JIN = JINb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { BTW = BTWb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { BTO = BTOb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { DIG = DIGb + (rand() % 7) - 3; }
+		if ((rand() % 5) == 0) { EDG = EDGb + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { EG2 = EG2b + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { CNR = CNRb + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { CNO = CNOb + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { CN2 = CN2b + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { NCN = NCNb + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { JIN = JINb + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { BTW = BTWb + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { BTO = BTOb + (rand() % 5) - 2; }
+		if ((rand() % 5) == 0) { DIG = DIGb + (rand() % 5) - 2; }
 
 		// Clean the win counts ready for next optimisation run.
 		rWin = 0.0f;
