@@ -31,6 +31,8 @@ struct validMove
 	int score;		// Calculated score used to select valid moves.
 };
 
+enum difficulty_e difficulty = MEDIUM;	// Difficulty level for the game (adjusts how the computer plays).
+
 // Integer constant weightings used for calculating moves. These are variable to support optimisation.
 int EDG =   1;	// Score for an edge position.
 int EG2 =   5;	// Score for edge next to a corner we have.
@@ -213,6 +215,17 @@ void computerMove(void)
 			selN = a;
 		}
 	}
+
+	// Depending on difficuty level replace the calculated move with a random move.
+	if (difficulty == EASY)			// Replace the move with a random move on a 50% chance.
+	{
+		if ((rand() % 2) == 0) { selN = rand() % moveN; }
+	}
+	else if (difficulty == MEDIUM)	// Replace the move with a random move on a 20% chance.
+	{
+		if ((rand() % 5) == 0) { selN = rand() % moveN; }
+	}
+	// For HARD the computer calculated move is always used.
 
 	// Play the selected valid move.
 	clearValid();	// Get rid of potential move markers now move has been chosen.

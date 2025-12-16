@@ -22,6 +22,7 @@
 #include "Images/Images.h"		// For the images to be drawn using Draw.h.
 #include "Sounds.h"				// For sounds and background music.
 #include "Game.h"				// For Othello Game API.
+#include "computerMove.h"		// To gain access to the difficulty constant to change difficulty level.
 
 enum gameState_e { SETUP, PLAYERMOVE, PANIMATE, WIIUMOVE, WANIMATE, NEWGAME };	// State machine to control game play.
 enum messageState_e { NOMESSAGE, SKIPTURN, REDWIN, GREENWIN, DRAWGAME };		// Messages to be displayed to player.
@@ -145,12 +146,15 @@ void displayGPad()
 	// Clear the Gamepad to have a grey background.
 	OSScreenClearBufferEx(SCREEN_DRC, 0x80808000u);
 
-	//	Instructions
+	// Instructions
 	drawText("Othello\0", 0xFEFEFE00, 4, 10, 10, SCREEN_DRC);
 	drawText("You play dark red, the computer plays light green.\0", 0xFEFEFE00, 2, 10, 100, SCREEN_DRC);
 	drawText("Play for as many red pieces as you can.\0", 0xFEFEFE00, 2, 10, 130, SCREEN_DRC);
 	drawText("Use the Joycon or direction buttons to select.\0", 0xFEFEFE00, 2, 10, 160, SCREEN_DRC);
 	drawText("Press A to make move.\0", 0xFEFEFE00, 2, 10, 190, SCREEN_DRC);
+	if (difficulty == EASY)   { drawText("EASY    Press ZL and ZR to change difficulty.\0", 0xFEFEFE00, 2, 10, 230, SCREEN_DRC); }
+	if (difficulty == MEDIUM) { drawText("MEDIUM  Press ZL and ZR to change difficulty.\0", 0xFEFEFE00, 2, 10, 230, SCREEN_DRC); }
+	if (difficulty == HARD)   { drawText("HARD    Press ZL and ZR to change difficulty.\0", 0xFEFEFE00, 2, 10, 230, SCREEN_DRC); }
 
 	// Flip the screen buffer to show the new display.
 	OSScreenFlipBuffersEx(SCREEN_DRC);
@@ -197,6 +201,13 @@ bool humanMove(void)
 		{
 			putMove(vMoves[selMove].x, vMoves[selMove].y);
 			return true;
+		}
+		// If commanded change the level of difficulty,
+		if ((status.trigger & VPAD_BUTTON_ZL) && (status.trigger & VPAD_BUTTON_ZL))
+		{
+			difficulty++;
+			if (difficulty > HARD) { difficulty = EASY;  } // Wrap difficulty back to easy.
+			gameState = SETUP;	// As difficulty changed, start a new game.
 		}
 	}
 	return false;

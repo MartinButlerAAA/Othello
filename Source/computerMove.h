@@ -10,6 +10,10 @@
 //************************************************************************************************************************
 #pragma once
 
+enum difficulty_e { EASY, MEDIUM, HARD };						// Difficulty levels.
+
+extern enum difficulty_e difficulty;
+
 // Global data and functions from Game.c that are needed for computer move, but are not made available for the main game program.
 extern char gameTable[10][10];									// Main game table.
 extern char	workingTable[10][10];								// Working copy of game table.
