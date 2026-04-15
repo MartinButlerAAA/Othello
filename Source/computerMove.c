@@ -1,5 +1,5 @@
 //************************************************************************************************************************
-//* Othello			Martin Butler	February 2026
+//* Othello			Martin Butler	April 2026
 //*
 //* Game to play Othello against the computer.
 //*
@@ -34,16 +34,17 @@ struct validMove
 enum difficulty_e difficulty = MEDIUM;	// Difficulty level for the game (adjusts how the computer plays).
 
 // Integer constant weightings used for calculating moves. These are variable to support optimisation.
-int EDG =  -6;	// Score for playing an edge early in the game.
-int EG2 =   8;	// Score for edge next to a corner we have.
-int CNR =  21;	// Score for a corner position.
-int CNO =  -9;	// Score for possible corner for opponent.
-int CN2 =   8;	// Score for possible corner next move.
-int NCN = -10;	// Score to avoid playing next to an available corner.
-int JIN =   6;	// Score for a position in the quadrant near a corner the computer holds.
-int BTO =   1;	// Score for playing between own pieces to fill in the gaps.
+// Note that these values could not be improved by a full optimisation run of 1000 x 10000 (10 million) games.
+int CNR =  10;	// Score for capturing a corner position.
+int CNO = -10;	// Score for possible corner for opponent.
+int CN2 =   3;	// Score for possible corner next move.
+int EG2 =   3;	// Score for edge next to a corner we have.
+int NCN =  -4;	// Score to avoid playing next to an available corner.
+int EDG =   3;	// Score for playing position two away from an available corner.
+int BTO =   2;	// Score for playing between own pieces to fill in the gaps.
+int ERL =   5;	// Score to stay in the middle early on in the game. 
 
-float losses = 300.0f;	// Count to check how many games lost in optimisation run.
+float losses = 500.0f;	// Count to check how many games lost in optimisation run.
 
 // Calculate the computer move. Find all valid moves for the current play and assess each move to give it a score.
 // The select the move with the highest score. Various aspects of the move are considered such as on an edge or corner.
@@ -80,10 +81,48 @@ void computerMove(void)
 				validMoves[moveN].y = y;
 				validMoves[moveN].score = 0;
 
-				// Early in the game avoid edges.
-				if (pcnt <= 24) {
-					if ((x == 1) || (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((x == 8) || (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				// Favour staying closer to the centre earlier in the game.
+				if (pcnt <= 20) {
+					if ((x == 4) && (y == 2)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 5) && (y == 2)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 4) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 5) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 2) && (y == 4)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 3) && (y == 4)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 6) && (y == 4)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 7) && (y == 4)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 2) && (y == 5)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 3) && (y == 5)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 6) && (y == 5)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 7) && (y == 5)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 4) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 5) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 4) && (y == 7)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+					if ((x == 5) && (y == 7)) { validMoves[moveN].score = validMoves[moveN].score + ERL; }
+				}
+
+				// Places next to C and X positions (next to a free corner) should be played to try to force to opponent to play C and X positions.
+				if ((pcnt > 10) && (pcnt <= 50)) {
+					if ((gameTable[1][1] == ' ') && (x == 3) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][1] == ' ') && (x == 3) && (y == 2)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][1] == ' ') && (x == 3) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][1] == ' ') && (x == 2) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][1] == ' ') && (x == 1) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][1] == ' ') && (x == 6) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][1] == ' ') && (x == 6) && (y == 2)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][1] == ' ') && (x == 6) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][1] == ' ') && (x == 7) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][1] == ' ') && (x == 8) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][8] == ' ') && (x == 1) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][8] == ' ') && (x == 2) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][8] == ' ') && (x == 3) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][8] == ' ') && (x == 3) && (y == 7)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[1][8] == ' ') && (x == 3) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][8] == ' ') && (x == 6) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][8] == ' ') && (x == 7) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][8] == ' ') && (x == 8) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][8] == ' ') && (x == 6) && (y == 7)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+					if ((gameTable[8][8] == ' ') && (x == 6) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
 				}
 
 				// If we have a corner, favour moves along edges next to the corner.
@@ -114,12 +153,6 @@ void computerMove(void)
 					if ((x == 2) && (y == 8) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
 				}
 
-				// Favour positions in the quadrant of a corner you have already captured.
-				if ((x <= 3) && (y <= 3) && (gameTable[1][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + JIN; }
-				if ((x >= 5) && (y >= 5) && (gameTable[8][8] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + JIN; }
-				if ((x <= 3) && (y <= 5) && (gameTable[1][8] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + JIN; }
-				if ((x >= 5) && (y <= 3) && (gameTable[8][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + JIN; }
-
 				// Favour positions that are already surrounded by your own pieces.
 				if ((gameTable[x - 1][y] == 'G') && (gameTable[x + 1][y] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
 				if ((gameTable[x][y - 1] == 'G') && (gameTable[x][y + 1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
@@ -132,17 +165,6 @@ void computerMove(void)
 				workingTable[x][y] = 'G';			// Try the move in the working table.
 				captureRedWork(x, y, workingTable);	// Capture the pieces on the working table.
 
-				// Early in the game reduce the score for each flipped piece to minimise flips.
-				if (pcnt <= 24) {
-					for (int xi = 1; xi <= 8; xi++)
-					{
-						for (int yi = 1; yi <= 8; yi++)
-						{
-							if (workingTable[xi][yi] == 'g') { validMoves[moveN].score--; }
-						}
-					}
-				}
-
 				clearFlips();	// Clear flips now they have been counted, so that the don't impact opponent valid move processing.
 				validRedMovesWork(workingTable);	// See what valid moves this gives to the opponent.
 
@@ -152,14 +174,12 @@ void computerMove(void)
 				if (workingTable[8][1] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CNO; }
 				if (workingTable[8][8] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CNO; }
 
-				// Later in the game subtracrt from the score for each valid move the opponent has, aiming to minimise their options.
-				if (pcnt > 24) {
-					for (int xi = 1; xi <= 8; xi++)
+				// Subtracrt from the score for each valid move the opponent has, aiming to minimise their options.
+				for (int xi = 1; xi <= 8; xi++)
+				{
+					for (int yi = 1; yi <= 8; yi++)
 					{
-						for (int yi = 1; yi <= 8; yi++)
-						{
-							if (workingTable[xi][yi] == 'V') { validMoves[moveN].score--; }
-						}
+						if (workingTable[xi][yi] == 'V') { validMoves[moveN].score--; }
 					}
 				}
 
@@ -266,19 +286,19 @@ void Optimise(void)
 	float rWin = 0.0f, gWin = 0.0f;		// Counts for each player game wins. Floating point is used so that draws can be awarded as 0.5 each.
 
 	// Local copies of the calculation constants to keep the best values found by optimisation.
-	int EDGb, EG2b, CNRb, CNOb, CN2b, NCNb, JINb, BTOb;
+	int CNRb, CNOb, CN2b, EG2b, NCNb, EDGb, BTOb, ERLb;
 
 	clearGameTable();	// Set up the game table.
 
 	// Set best to match starting values before optimisation.
-	EDGb = EDG;
-	EG2b = EG2;
 	CNRb = CNR;
 	CNOb = CNO;
 	CN2b = CN2;
+	EG2b = EG2;
 	NCNb = NCN;
-	JINb = JIN;
+	EDGb = EDG;
 	BTOb = BTO;
+	ERLb = ERL;
 
 	// Check the board to get the pieces counts before the first display.
 	checkBoard('R', &red, &green);
@@ -287,7 +307,7 @@ void Optimise(void)
 	{
 		// This restarts the random number generator to the same position.
 		// All things being equal, the random player, plays the same.
-		srand(100);
+		srand(500);
 
 		for (int b = 0; b < 5000; b++)	// Try lots of games alternating starting player.
 		{
@@ -365,53 +385,51 @@ void Optimise(void)
 			checkBoard('R', &red, &green);
 		}
 
-		std::cout << a << " Red Wins: " << rWin << " Green Wins: " << gWin << "\n";	// Display number of wins.
+		std::cout << a << " Red Wins: " << (float)rWin/100.0f << "%\n";	// Display number of wins.
 
 		// If the opponent won fewer games, these weightings are an improvemnt, so keep them and display them.
 		if (rWin < losses)
 		{
 			// Set best to match current values;
-			EDGb = EDG;
-			EG2b = EG2;
 			CNRb = CNR;
 			CNOb = CNO;
 			CN2b = CN2;
+			EG2b = EG2;
 			NCNb = NCN;
-			JINb = JIN;
+			EDGb = EDG;
 			BTOb = BTO;
-			std::cout << "EDG: " << EDG << " EG2: " << EG2 << " CNR: " << CNR << " CNO: " << CNO << " CN2: " << CN2 << " NCN: " << NCN << " JIN: " << JIN << " BTO: " << BTO << "\n";	// Display weightings.
+			ERLb = ERL;
+			std::cout << " CNR: " << CNR << " CNO: " << CNO << " CN2: " << CN2 << " EG2: " << EG2 << " NCN: " << NCN << " EDG: " << EDG << " BTO: " << BTO << " ERL: " << ERL << "\n";	// Display weightings.
 
 			// Set the new expectation for losses, ready to test the next set of weightings.
 			losses = rWin;
 		}
 
 		// Set the current settings back to the best values (for the case where the trial weightings were worse than the best).
-		EDG = EDGb;
-		EG2 = EG2b;
 		CNR = CNRb;
 		CNO = CNOb;
 		CN2 = CN2b;
+		EG2 = EG2b;
 		NCN = NCNb;
-		JIN = JINb;
+		EDG = EDGb;
 		BTO = BTOb;
+		ERL = ERLb;
 
 		// Randomly tweak some of the values to trial these against the dummy human player.
 		srand(time(NULL));
-		if ((rand() % 5) == 0) { EDG = EDGb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { EG2 = EG2b + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { CNR = CNRb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { CNO = CNOb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { CN2 = CN2b + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { NCN = NCNb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { JIN = JINb + (rand() % 7) - 3; }
-		if ((rand() % 5) == 0) { BTO = BTOb + (rand() % 7) - 3; }
+		if ((rand() % 4) == 0) { CNR = CNRb + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { CNO = CNOb + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { CN2 = CN2b + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { EG2 = EG2b + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { NCN = NCNb + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { EDG = EDGb + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { BTO = BTOb + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { ERL = ERLb + (rand() % 5) - 2; }
 
 		// Clean the win counts ready for next optimisation run.
 		rWin = 0.0f;
 		gWin = 0.0f;
 	}
-	// Show the final weightings after optimisation.
-	std::cout << "EDG: " << EDGb << " EG2: " << EG2b << " CNR: " << CNRb << " CNO: " << CNOb << " CN2: " << CN2b << " NCN: " << NCNb << " JIN: " << JINb << " BTO: " << BTOb << "\n";	// Display weightings.
 }
 #endif
 
