@@ -208,15 +208,12 @@ void computerMove(void)
 		}
 	}
 
+	// Make a random move for the first computer move, to avoid playing the same every time.
+	// Less than 6 allows to play random move if computer plays second as well.
+	if (pcnt < 6) { selN = rand() % moveN; }
 	// Depending on difficuty level replace the calculated move with a random move.
-	if (difficulty == EASY)			// Replace the move with a random move on a 50% chance.
-	{
-		if ((rand() % 2) == 0) { selN = rand() % moveN; }
-	}
-	else if (difficulty == MEDIUM)	// Replace the move with a random move on a 20% chance.
-	{
-		if ((rand() % 5) == 0) { selN = rand() % moveN; }
-	}
+	else if (difficulty == EASY) { if ((rand() % 2) == 0) { selN = rand() % moveN; } } // 50% random moves.
+	else if (difficulty == MEDIUM) { if ((rand() % 5) == 0) { selN = rand() % moveN; } } // 20% random moves.
 	// For HARD the computer calculated move is always used.
 
 	// Play the selected valid move.
