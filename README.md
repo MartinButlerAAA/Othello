@@ -10,5 +10,7 @@ Hope you like it.
 
 The game makes use of osscreen and sndcore2 code I developed for previous games, see [PacMan-ish Wiki](https://github.com/MartinButlerAAA/PacMan-ishU/wiki) and [Connect4U](https://github.com/MartinButlerAAA/Connect4U).
 
+There is now a Java version of the game for PC [OthelloPC](https://github.com/MartinButlerAAA/OthelloPC).
+
 
 
