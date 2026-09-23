@@ -31,23 +31,25 @@ struct validMove
 	int score;		// Calculated score used to select valid moves.
 };
 
-enum difficulty_e difficulty = MEDIUM;	// Difficulty level for the game (adjusts how the computer plays).
+enum difficulty_e difficulty = HARD;	// Difficulty level for the game (adjusts how the computer plays).
 
 // Integer constant weightings used for calculating moves. These are variable to support optimisation.
 // Note that these values could not be improved by a full optimisation run of 1000 x 10000 (10 million) games.
-int CNR =  10;	// Score for capturing a corner position.
-int CNO = -10;	// Score for possible corner for opponent.
-int CN2 =   3;	// Score for possible corner next move.
-int EG2 =   3;	// Score for edge next to a corner we have.
-int NCN =  -4;	// Score to avoid playing next to an available corner.
-int EDG =   3;	// Score for playing position two away from an available corner.
-int BTO =   2;	// Score for playing between own pieces to fill in the gaps.
-int ERL =   5;	// Score to stay in the middle early on in the game. 
+int CNR =   9;	// Score for capturing a corner position.
+int CNO = -13;	// Score for possible corner for opponent.
+int CN2 =   6;	// Score for possible corner next move.
+int EG2 =   1;	// Score for edge next to a corner we have.
+int NCN = -11;	// Score to avoid playing next to an available corner.
+int NEG =  -2;	// Playing next to a corner on an edge to force a move.
+int EDG =   4;	// Score for playing position two away from an available corner.
+int BTO =   1;	// Score for playing between own or other pieces to fill in the gaps.
+int ERL =   1;	// Score to stay in the middle early on in the game. 
+int PEG =  10;	// Score for need to play 'C' position to protect an edge.
 
-float losses = 500.0f;	// Count to check how many games lost in optimisation run.
+float losses = 5000.0f;	// Count to check how many games lost in optimisation run.
 
-// Calculate the computer move. Find all valid moves for the current play and assess each move to give it a score.
-// The select the move with the highest score. Various aspects of the move are considered such as on an edge or corner.
+// Find all valid moves for the current play and assess each move to give it a score.
+// Then select the move with the highest score. Various aspects of the move are considered such as on an edge or corner.
 void computerMove(void)
 {
 	validMove_t validMoves[60];	// Array to store valid moves (60 is the maximum number of available spaces on the board at the start of the game).
@@ -55,6 +57,10 @@ void computerMove(void)
 	unsigned int selN  = 0;		// Selected valid move.
 	int captN = 0;				// Used to record the highest score to select the best move.
 	int pcnt = 0;				// Count of all pieces on the board.
+	int cmpCnt = 0;				// Count of possible computer moves.
+	int oppCnt = 0;				// Count of possible opponent moves. 
+	int cmpPcs = 0;				// Count of computer pieces.
+	int oppPcs = 0;				// Count of opponent pieces.
 
 	// Count up the pieces played.
 	pcnt = 0;
@@ -102,28 +108,26 @@ void computerMove(void)
 				}
 
 				// Places next to C and X positions (next to a free corner) should be played to try to force to opponent to play C and X positions.
-				if ((pcnt > 10) && (pcnt <= 50)) {
-					if ((gameTable[1][1] == ' ') && (x == 3) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][1] == ' ') && (x == 3) && (y == 2)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][1] == ' ') && (x == 3) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][1] == ' ') && (x == 2) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][1] == ' ') && (x == 1) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][1] == ' ') && (x == 6) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][1] == ' ') && (x == 6) && (y == 2)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][1] == ' ') && (x == 6) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][1] == ' ') && (x == 7) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][1] == ' ') && (x == 8) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][8] == ' ') && (x == 1) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][8] == ' ') && (x == 2) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][8] == ' ') && (x == 3) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][8] == ' ') && (x == 3) && (y == 7)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[1][8] == ' ') && (x == 3) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][8] == ' ') && (x == 6) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][8] == ' ') && (x == 7) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][8] == ' ') && (x == 8) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][8] == ' ') && (x == 6) && (y == 7)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-					if ((gameTable[8][8] == ' ') && (x == 6) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
-				}
+				if ((gameTable[1][1] == ' ') && (x == 3) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][1] == ' ') && (x == 3) && (y == 2)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][1] == ' ') && (x == 3) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][1] == ' ') && (x == 2) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][1] == ' ') && (x == 1) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][1] == ' ') && (x == 6) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][1] == ' ') && (x == 6) && (y == 2)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][1] == ' ') && (x == 6) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][1] == ' ') && (x == 7) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][1] == ' ') && (x == 8) && (y == 3)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][8] == ' ') && (x == 1) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][8] == ' ') && (x == 2) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][8] == ' ') && (x == 3) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][8] == ' ') && (x == 3) && (y == 7)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[1][8] == ' ') && (x == 3) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][8] == ' ') && (x == 6) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][8] == ' ') && (x == 7) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][8] == ' ') && (x == 8) && (y == 6)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][8] == ' ') && (x == 6) && (y == 7)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
+				if ((gameTable[8][8] == ' ') && (x == 6) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + EDG; }
 
 				// If we have a corner, favour moves along edges next to the corner.
 				if ((gameTable[1][1] == 'G') && ((x == 1) || (y == 1))) { validMoves[moveN].score = validMoves[moveN].score + EG2; }
@@ -137,27 +141,42 @@ void computerMove(void)
 				if ((x == 8) && (y == 1)) { validMoves[moveN].score = validMoves[moveN].score + CNR; }
 				if ((x == 8) && (y == 8)) { validMoves[moveN].score = validMoves[moveN].score + CNR; }
 
-				// Avoid giving away a corner, by playing a position next to an available corner until late in the game.
-				if (pcnt <= 50) {
-					if ((x == 2) && (y == 2) && (gameTable[1][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 1) && (y == 2) && (gameTable[1][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 2) && (y == 1) && (gameTable[1][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 7) && (y == 7) && (gameTable[8][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 7) && (y == 8) && (gameTable[8][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 8) && (y == 7) && (gameTable[8][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 7) && (y == 2) && (gameTable[8][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 7) && (y == 1) && (gameTable[8][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 8) && (y == 2) && (gameTable[8][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 2) && (y == 7) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 1) && (y == 7) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-					if ((x == 2) && (y == 8) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
-				}
+				// Avoid giving away a corner, by playing an 'X' position next to an available corner.
+				if ((x == 2) && (y == 2) && (gameTable[1][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
+				if ((x == 7) && (y == 7) && (gameTable[8][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
+				if ((x == 7) && (y == 2) && (gameTable[8][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
+				if ((x == 2) && (y == 7) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NCN; }
+
+				// Playing next to a corner on an edge can be an advantage, so 'C' positions have a different score to 'X'.
+				if ((x == 1) && (y == 2) && (gameTable[1][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NEG; }
+				if ((x == 2) && (y == 1) && (gameTable[1][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NEG; }
+				if ((x == 7) && (y == 8) && (gameTable[8][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NEG; }
+				if ((x == 8) && (y == 7) && (gameTable[8][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NEG; }
+				if ((x == 7) && (y == 1) && (gameTable[8][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NEG; }
+				if ((x == 8) && (y == 2) && (gameTable[8][1] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NEG; }
+				if ((x == 1) && (y == 7) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NEG; }
+				if ((x == 2) && (y == 8) && (gameTable[1][8] == ' ')) { validMoves[moveN].score = validMoves[moveN].score + NEG; }
+
+				// Detect if opponent is trying to take an edge.
+				if ((y == 1) && (x >= 2) && (x <= 6) && (gameTable[1][1] == ' ') && (gameTable[x + 1][1] == 'R') && (gameTable[x + 2][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + PEG; }
+				if ((y == 1) && (x <= 6) && (x >= 3) && (gameTable[8][1] == ' ') && (gameTable[x - 1][1] == 'R') && (gameTable[x - 2][1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + PEG; }
+				if ((y == 8) && (x >= 2) && (x <= 6) && (gameTable[1][8] == ' ') && (gameTable[x + 1][8] == 'R') && (gameTable[x + 2][8] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + PEG; }
+				if ((y == 8) && (x <= 6) && (x >= 3) && (gameTable[8][8] == ' ') && (gameTable[x - 1][8] == 'R') && (gameTable[x - 2][8] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + PEG; }
+				if ((x == 1) && (y >= 2) && (y <= 6) && (gameTable[1][1] == ' ') && (gameTable[1][y + 1] == 'R') && (gameTable[1][y + 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + PEG; }
+				if ((x == 1) && (y <= 6) && (y >= 3) && (gameTable[8][1] == ' ') && (gameTable[1][y - 1] == 'R') && (gameTable[1][y - 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + PEG; }
+				if ((x == 8) && (y >= 2) && (y <= 6) && (gameTable[8][1] == ' ') && (gameTable[8][y + 1] == 'R') && (gameTable[8][y + 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + PEG; }
+				if ((x == 8) && (y <= 6) && (y >= 3) && (gameTable[8][8] == ' ') && (gameTable[8][y - 1] == 'R') && (gameTable[8][y - 2] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + PEG; }
 
 				// Favour positions that are already surrounded by your own pieces.
 				if ((gameTable[x - 1][y] == 'G') && (gameTable[x + 1][y] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
 				if ((gameTable[x][y - 1] == 'G') && (gameTable[x][y + 1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
 				if ((gameTable[x - 1][y - 1] == 'G') && (gameTable[x + 1][y + 1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
 				if ((gameTable[x + 1][y - 1] == 'G') && (gameTable[x - 1][y + 1] == 'G')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
+				// Favour positions that are already surrounded by opponent pieces.
+				if ((gameTable[x - 1][y] == 'R') && (gameTable[x + 1][y] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
+				if ((gameTable[x][y - 1] == 'R') && (gameTable[x][y + 1] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
+				if ((gameTable[x - 1][y - 1] == 'R') && (gameTable[x + 1][y + 1] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
+				if ((gameTable[x + 1][y - 1] == 'R') && (gameTable[x - 1][y + 1] == 'R')) { validMoves[moveN].score = validMoves[moveN].score + BTO; }
 
 				// Try out the move.
 				tableToWorking();					// Copy the current game to the working table for processing.	
@@ -174,12 +193,15 @@ void computerMove(void)
 				if (workingTable[8][1] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CNO; }
 				if (workingTable[8][8] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CNO; }
 
-				// Subtracrt from the score for each valid move the opponent has, aiming to minimise their options.
-				for (int xi = 1; xi <= 8; xi++)
-				{
-					for (int yi = 1; yi <= 8; yi++)
+				// During middle of game count up the opponent possible moves.
+				oppCnt = 0;	// do outside of if to ensure it is set to zero when not being used.
+				if ((pcnt > 20) && (pcnt <= 50)) {
+					for (int xi = 1; xi <= 8; xi++)
 					{
-						if (workingTable[xi][yi] == 'V') { validMoves[moveN].score--; }
+						for (int yi = 1; yi <= 8; yi++)
+						{
+							if (workingTable[xi][yi] == 'V') { oppCnt++; }
+						}
 					}
 				}
 
@@ -191,6 +213,37 @@ void computerMove(void)
 				if (workingTable[1][8] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CN2; }
 				if (workingTable[8][1] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CN2; }
 				if (workingTable[8][8] == 'V') { validMoves[moveN].score = validMoves[moveN].score + CN2; }
+
+				// During middle of game count computer possible moves.
+				cmpCnt = 0;
+				if ((pcnt > 20) && (pcnt <= 50)) {
+					for (int xi = 1; xi <= 8; xi++)
+					{
+						for (int yi = 1; yi <= 8; yi++)
+						{
+							if (workingTable[xi][yi] == 'V') { cmpCnt++; }
+						}
+					}
+				}
+
+				// Early in the game count computer and opponent pieces.
+				cmpPcs = 0;
+				oppPcs = 0;
+				if (pcnt <= 20) {
+					for (int xi = 1; xi <= 8; xi++)
+					{
+						for (int yi = 1; yi <= 8; yi++)
+						{
+							if (workingTable[xi][yi] == 'G') { cmpPcs++; }
+							if (workingTable[xi][yi] == 'R') { oppPcs++; }
+						}
+					}
+				}
+
+				// Add/subtract opponent and computer scores.
+				// Early in the game want more opponent pieces than the computer.
+				// Mid game want more computer options than opponent.
+				validMoves[moveN].score = validMoves[moveN].score - oppCnt + cmpCnt - cmpPcs + oppPcs;
 
 				moveN++;	// Go on to the next valid move.
 			}
@@ -283,7 +336,7 @@ void Optimise(void)
 	float rWin = 0.0f, gWin = 0.0f;		// Counts for each player game wins. Floating point is used so that draws can be awarded as 0.5 each.
 
 	// Local copies of the calculation constants to keep the best values found by optimisation.
-	int CNRb, CNOb, CN2b, EG2b, NCNb, EDGb, BTOb, ERLb;
+	int CNRb, CNOb, CN2b, EG2b, NCNb, NEGb, EDGb, BTOb, ERLb, PEGb;
 
 	clearGameTable();	// Set up the game table.
 
@@ -293,9 +346,11 @@ void Optimise(void)
 	CN2b = CN2;
 	EG2b = EG2;
 	NCNb = NCN;
+	NEGb = NEG;
 	EDGb = EDG;
 	BTOb = BTO;
 	ERLb = ERL;
+	PEGb = PEG;
 
 	// Check the board to get the pieces counts before the first display.
 	checkBoard('R', &red, &green);
@@ -304,7 +359,7 @@ void Optimise(void)
 	{
 		// This restarts the random number generator to the same position.
 		// All things being equal, the random player, plays the same.
-		srand(500);
+		srand(300);
 
 		for (int b = 0; b < 5000; b++)	// Try lots of games alternating starting player.
 		{
@@ -337,7 +392,7 @@ void Optimise(void)
 			// Work out who won and update the score count.
 			if (red > green) { rWin = rWin + 1.0f; }
 			else if (red < green) { gWin = gWin + 1.0f; }
-			else { rWin = rWin + 0.5f; gWin = gWin + 0.5f; }	// Need to consider the players can draw.
+			// A draw is not scored as computer forcing a draw is still considered good.
 
 			clearGameTable();	// Set up the game table.
 
@@ -374,7 +429,7 @@ void Optimise(void)
 			// Work out who won and update the score count.
 			if (red > green) { rWin = rWin + 1.0f; }
 			else if (red < green) { gWin = gWin + 1.0f; }
-			else { rWin = rWin + 0.5f; gWin = gWin + 0.5f; }	// Need to consider the players can draw.
+			// A draw is not scored as computer forcing a draw is still considered good.
 
 			clearGameTable();	// Set up the game table.
 
@@ -393,10 +448,12 @@ void Optimise(void)
 			CN2b = CN2;
 			EG2b = EG2;
 			NCNb = NCN;
+			NEGb = NEG;
 			EDGb = EDG;
 			BTOb = BTO;
 			ERLb = ERL;
-			std::cout << " CNR: " << CNR << " CNO: " << CNO << " CN2: " << CN2 << " EG2: " << EG2 << " NCN: " << NCN << " EDG: " << EDG << " BTO: " << BTO << " ERL: " << ERL << "\n";	// Display weightings.
+			PEGb = PEG;
+			std::cout << " CNR: " << CNR << " CNO: " << CNO << " CN2: " << CN2 << " EG2: " << EG2 << " NCN: " << NCN << " NEG: " << NEG << " EDG: " << EDG << " BTO: " << BTO << " ERL: " << ERL << " PEG: " << PEG << "\n";	// Display weightings.
 
 			// Set the new expectation for losses, ready to test the next set of weightings.
 			losses = rWin;
@@ -408,9 +465,11 @@ void Optimise(void)
 		CN2 = CN2b;
 		EG2 = EG2b;
 		NCN = NCNb;
+		NEG = NEGb;
 		EDG = EDGb;
 		BTO = BTOb;
 		ERL = ERLb;
+		PEG = PEGb;
 
 		// Randomly tweak some of the values to trial these against the dummy human player.
 		srand(time(NULL));
@@ -419,9 +478,11 @@ void Optimise(void)
 		if ((rand() % 4) == 0) { CN2 = CN2b + (rand() % 5) - 2; }
 		if ((rand() % 4) == 0) { EG2 = EG2b + (rand() % 5) - 2; }
 		if ((rand() % 4) == 0) { NCN = NCNb + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { NEG = NEGb + (rand() % 5) - 2; }
 		if ((rand() % 4) == 0) { EDG = EDGb + (rand() % 5) - 2; }
 		if ((rand() % 4) == 0) { BTO = BTOb + (rand() % 5) - 2; }
 		if ((rand() % 4) == 0) { ERL = ERLb + (rand() % 5) - 2; }
+		if ((rand() % 4) == 0) { PEG = PEGb + (rand() % 5) - 2; }
 
 		// Clean the win counts ready for next optimisation run.
 		rWin = 0.0f;
